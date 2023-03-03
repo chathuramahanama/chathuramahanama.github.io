@@ -1,0 +1,880 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Chathura Mahanama - Personal Portfolio Website " />
+	<meta name="keywords" content="blog, business card, creative, creative portfolio, cv theme, online resume, personal, portfolio, professional cv, responsive portfolio, resume, resume theme, vcard" />
+	<meta name="author" content="Chathura Mahanama" />
+    <title>Chathura Mahanama - Personal Portfolio Website </title>
+  <!--favicon-img--> 
+   <link rel="icon" type="image/png" href="images/favicon.png">
+   <!--favicon-img-->
+   <!--main css file should not be removed -->
+    <link rel="stylesheet" href="css/index.css">
+    <!--main css file-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.2.6/gsap.min.js"></script>
+    <!--ghost MODE EFFECT-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/88/three.min.js"></script>
+    <script id="vertexShader" type="x-shader/x-vertex">
+        void main() {
+            gl_Position = vec4( position, 1.0 );
+        }
+    </script>
+    <script id="fragmentShader" type="x-shader/x-fragment">
+      uniform vec2 u_resolution;
+      uniform vec2 u_mouse;
+      uniform float u_time;
+      uniform sampler2D u_noise;
+      uniform sampler2D u_buffer;
+      uniform bool u_renderpass;
+        
+      const float blurMultiplier = 0.95;
+      const float circleSize = .25;
+      const float blurStrength = .98;
+      const float threshold = .5;
+      const float scale = 4.;
+      
+      #define _fract true
+      
+      #define PI 3.141592653589793
+      #define TAU 6.283185307179586
+    
+      vec2 hash2(vec2 p)
+      {
+        vec2 o = texture2D( u_noise, (p+0.5)/256.0, -100.0 ).xy;
+        return o;
+      }
+      
+      vec3 hsb2rgb( in vec3 c ){
+        vec3 rgb = clamp(abs(mod(c.x*6.0+vec3(0.0,4.0,2.0),
+                                 6.0)-3.0)-1.0,
+                         0.0,
+                         1.0 );
+        rgb = rgb*rgb*(3.0-2.0*rgb);
+        return c.z * mix( vec3(1.0), rgb, c.y);
+      }
+      
+      vec3 domain(vec2 z){
+        return vec3(hsb2rgb(vec3(atan(z.y,z.x)/TAU,1.,1.)));
+      }
+      vec3 colour(vec2 z) {
+          return domain(z);
+      }
+    
+      
+    #define pow2(x) (x * x)
+    
+    const int samples = 8;
+    const float sigma = float(samples) * 0.25;
+    
+    float gaussian(vec2 i) {
+        return 1.0 / (2.0 * PI * pow2(sigma)) * exp(-((pow2(i.x) + pow2(i.y)) / (2.0 * pow2(sigma))));
+    }
+    
+    vec3 hash33(vec3 p){ 
+        
+        float n = sin(dot(p, vec3(7, 157, 113)));    
+        return fract(vec3(2097152, 262144, 32768)*n); 
+    }
+    
+    vec3 blur(sampler2D sp, vec2 uv, vec2 scale) {
+        vec3 col = vec3(0.0);
+        float accum = 0.0;
+        float weight;
+        vec2 offset;
+        
+        for (int x = -samples / 2; x < samples / 2; ++x) {
+            for (int y = -samples / 2; y < samples / 2; ++y) {
+                offset = vec2(x, y);
+                weight = gaussian(offset);
+                col += texture2D(sp, uv + scale * offset).rgb * weight;
+                accum += weight;
+            }
+        }
+        
+        return col / accum;
+    }
+      void main() {
+        vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;
+        uv *= scale;
+        vec2 mouse = u_mouse * scale;
+        
+        vec2 ps = vec2(1.0) / u_resolution.xy;
+        vec2 sample = gl_FragCoord.xy / u_resolution.xy;
+        vec2 o = mouse*.2+vec2(.65, .5);
+        float d = .98;
+        sample = d * (sample - o);
+        sample += o;
+        sample += vec2(sin((u_time+uv.y * .5)*10.)*.001, -.00);
+        
+        vec3 fragcolour;
+        vec4 tex;
+        if(u_renderpass) {
+          tex = vec4(blur(u_buffer, sample, ps*blurStrength) * blurMultiplier, 1.);
+          float df = length(mouse - uv);
+          fragcolour = vec3( smoothstep( circleSize, 0., df ) );
+        } else {
+          tex = texture2D(u_buffer, sample, 2.) * .98;
+          tex = vec4(
+            smoothstep(0.0, threshold - fwidth(tex.x), tex.x),
+            smoothstep(0.2, threshold - fwidth(tex.y) + .2, tex.y),
+            smoothstep(-0.05, threshold - fwidth(tex.z) - .2, tex.z),
+            1.);
+          vec3 n = hash33(vec3(uv, u_time*.1));
+          tex.rgb += n * .2 - .1;
+          // tex = vec4(
+          //   smoothstep(0.0, threshold - fwidth(tex.x), tex.x),
+          //   smoothstep(0.2, threshold - fwidth(tex.x) + .2, tex.x),
+          //   smoothstep(-0.05, threshold - fwidth(tex.x) - .2, tex.x),
+          //   1.);
+        }
+        // vec4 tex = texture2D(u_buffer, sample, 2.) * .98;
+        
+        
+    
+        gl_FragColor = vec4(fragcolour,1.0);
+        gl_FragColor += tex;
+        
+      }
+    </script>
+
+
+
+
+
+</head>
+<body>
+    <!--contains all the div-->
+    <div id="all">
+    <!--mouse  follower-->
+        <div class="cursor"></div>
+    <!--mouse  follower-->
+    <!--loader-->
+        <div id="loader">
+            <span class="color">CHATHURA </span>MAHANAMA 
+        </div>
+    <!--loader-end-->
+    <!--link-screen-->
+        <div id="breaker">
+        </div>
+        <div id="breaker-two">
+        </div>
+    <!--link-screen-->
+        <!--Main-Section-->
+        <!--Navigator-fullscreen-->
+        <div id="navigation-content">
+            <div class="logo">
+                <!--img src="images/willy wonka logo.png" alt="logo"-->
+            </div>
+            <div class="navigation-close">
+                <span class="close-first"></span>
+                <span class="close-second"></span>
+            </div>
+            <div class="navigation-links">
+                <div id="container" touch-action="none"></div>
+                <a href="#" data-text="HOME" id="home-link" >HOME</a>
+                <a href="#" data-text="ABOUT" id="about-link" >ABOUT</a>
+                <a href="#" data-text="BLOG" id="blog-link" >BLOG</a>
+                <a href="#" data-text="PORTFOLIO" id="portfolio-link" >PORTFOLIO</a>
+                <a href="#" data-text="CONTACT" id="contact-link" >CONTACT</a>
+            </div>
+        </div>
+        <!--Navigator-Fullscreen END-->
+          <!--Home Page-->
+        <!--Menubar-->
+        <div id="navigation-bar">
+            <!--img src="images/willy wonka logo.png" alt="logo"-->
+            <div class="menubar">
+                <span class="first-span"></span>
+                <span class="second-span"></span>
+                <span class="third-span"></span>
+            </div>
+        </div>
+        <!--Menubar End-->
+          <!--Header-->
+        <div id="header">
+            <div id="particles"></div>
+              <!--Social Media Links-->
+            <div class="social-media-links">
+                <a href="https://www.instagram.com/"><img src="images/instagram logo.png" class="social-media" alt="instagram-logo"></a><!--Your instagram homepage link inser in place of "#"-->
+                <a href="https://www.facebook.com/chathura.mahanama.3/"><img src="images/facebook logo.png" class="social-media" alt="facebook-logo"></a>
+                <a href="https://www.linkedin.com/in/mahanama-info/"><img src="images/linkedin logo.png" class="social-media" alt="linkedin-logo"></a>
+                <a href="https://twitter.com/mahanama_info"><img src="images/twitter logo.png" class="social-media" alt="twitter-logo"></a>
+                <a href="https://github.com/CODE04U"><img src="images/github logo.png" class="social-media" alt="twitter-logo"></a>
+
+            </div>
+            <!--Social Media Links end-->
+            <div class="header-content">
+                <div class="header-content-box">
+                <div class="firstline"><span class="color">CHATHURA </span>MAHANAMA</div>
+                <div class="secondline">
+                I'm a
+            <span class="txt-rotate color" data-period="1200"data-rotate='[ " Designer.", " Developer.", " Blogger.", " Freelancer." ]'></span>
+            <span class="slash">|</span>
+        </div>
+                    <div class="contact">
+                        <a href="Mailto:mahanama.info@gmail.com">
+                            <script src="https://cdn.lordicon.com/xdjxvujz.js"></script>
+                            <lord-icon
+                                src="https://cdn.lordicon.com/iicmtpsq.json"
+                                trigger="morph"
+                                colors="primary:#e4e4e4"
+                                state="hover"
+                                style="width:40px;height:40px">
+                            </lord-icon>
+                        </a><!--Your email Id write in place of "#"-->
+
+                <a href="Tel:+94 772764721">
+                            <script src="https://cdn.lordicon.com/xdjxvujz.js"></script>
+                            <lord-icon
+                                src="https://cdn.lordicon.com/cnyeuzxc.json"
+                                trigger="morph"
+                                colors="primary:#b4b4b4"
+                                style="width:40px;height:40px">
+                            </lord-icon>
+                        </a><!--Your telephone number Id write in place of "#"-->
+
+                    </div>    
+            </div>
+            </div>
+            <!--header image-->
+            <div class="header-image">
+            <img src="images/chathura B&W.jpg" alt="logo">
+            </div>
+            <!--header image end-->
+        </div>
+           <!--Header End-->
+        <!--HomePage End-->
+        <!--Main-Section End-->
+        <!--about-->
+        <div id="about">
+            <div class="color-changer">
+            <div class="color-panel">
+                <img src="images/gear.png" alt="">
+            </div>
+            <div class="color-selector">
+                <div class="heading">COLOR THEME</div>
+                <div class="colors">
+                    <ul >
+                    <li>
+                        <a href="#0" class="color-red " title="color-red"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-purple" title="color-purple"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-malt" title="color-malt"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-green" title="color-green"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-blue" title="color-blue"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-orange" title="color-orange"></a>
+                    </li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+            <!--about content-->
+            <div id="about-content">
+                <div class="about-header">
+                    About <span class="color">Me</span>
+                    <span class ="header-caption">Get to Know <span class="color"> me.</span></span>
+                </div>
+                <div class="about-main">
+            <div class="about-first-paragraph wow">
+            <!--about description-->
+               <span class="about-first-line">
+                    I'm creative 
+                    <span class="color">DEVELOPER/DESIGNER</span>
+                     based in Colombo, Sri Lanka </span>
+                     <br>
+               <span class="about-second-line"> With 4 years of experience as a professional Web developer, 
+                I have acquired the skills and knowledge necessary to make your project a success. I enjoy every step while working.</span>
+               <div class="cv">
+                <a href="#"><button>Download <span class="colors">CV</span></button></a>
+            </div>
+            </div>
+            <!--about picture-->
+            <div class="about-img">
+                <img src="images/intro.png" alt="Your Image">
+            </div>
+            </div>
+    
+            </div>
+            <!--services start-->
+            <div id="services">
+                <div class="color-changer">
+                    <div class="color-panel">
+                        <img src="images/gear.png" alt="">
+                    </div>
+                    <div class="color-selector">
+                        <div class="heading">COLOR THEME</div>
+                        <div class="colors">
+                            <ul >
+                            <li>
+                                <a href="#0" class="color-red " title="color-red"></a>
+                            </li>
+                            <li>
+                                <a href="#0" class="color-purple" title="color-purple"></a>
+                            </li>
+                            <li>
+                                <a href="#0" class="color-malt" title="color-malt"></a>
+                            </li>
+                            <li>
+                                <a href="#0" class="color-green" title="color-green"></a>
+                            </li>
+                            <li>
+                                <a href="#0" class="color-blue" title="color-blue"></a>
+                            </li>
+                            <li>
+                                <a href="#0" class="color-orange" title="color-orange"></a>
+                            </li>
+                            </ul>
+                        </div>
+                    </div>
+                    </div>
+            <!--services header-->
+                    <div class="services-heading wow">
+                        <span class="color">My</span> Services
+                    </div>
+            <!--services header end-->
+            <!--services content-->
+                    <div class="services-content">
+                           <div class="service-one service wow">
+                               <div class="service-img">
+                               <img src="images/coding.png" alt="service-one">
+                               </div>
+                               <div class="service-description">
+                                <h2>Web Designing</h2>
+                                <p>Web experiences are high-performing, feature-packed and digitally transformative, 
+                                    designed to be user-friendly, fully functional, very secure and able to scale as your enterprise grows.</p>
+                               </div>
+                           </div>
+                           <div class="service-two service wow">
+                               <div class="service-img">
+                               <img src="images/instagram.png" alt="service-two">
+                               </div>
+                               <div class="service-description">
+                                <h2>Social Media</h2>
+                                <p> Social media marketing services will help you increase your followers with relevant people. 
+                                    i will ensure that your followers match the demographics, interests, and behaviors of your typical customers.</p>
+                               </div>
+                           </div>
+                           <div class="service-three service wow">
+                            <div class="service-img">
+                               <img src="images/bulb.png" alt="service-three">
+                            </div>
+                            <div class="service-description">
+                                <h2>Creative Design</h2>
+                                <p>Make it easy to work with professional, 
+                                    creative experts from around the world and build your brand through custom, memorable design.</p>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <!--services content end-->
+            <!--services end-->
+            <div id="skills">
+                <div class="skills-header">
+                     My <span class="color"> Skills</span>
+                </div>
+                <div class="skills-content " style="text-align: center;">
+                    <div class="skill-html skill">
+                        <div class="skill-text">
+                    <div class="html">
+                        HTML/CSS
+                    </div>
+                        </div>
+                    <div class="html-prog wow prog">
+                 <div class="html-progress wow">95%</div>
+                    </div>
+                    </div>
+                    <div class="skill-html skill">
+                        <div class="skill-text">
+                    <div class="html">
+                      JAVASCRIPT
+                    </div>
+                        </div>
+                    <div class="html-prog wow prog">
+                 <div class="js-progress wow">90%</div>
+                    </div>
+                    </div>
+                    <div class="skill-html skill">
+                        <div class="skill-text">
+                    <div class="html">
+                        ADOBE PS
+                    </div>
+                        </div>
+                    <div class="html-prog wow prog">
+                 <div class="adobe-progress wow">83%</div>
+                    </div>
+                    </div>
+                    <div class="skill-html skill">
+                        <div class="skill-text">
+                    <div class="html">
+                        PHP
+                    </div>
+                        </div>
+                    <div class="html-prog wow prog">
+                 <div class="php-progress wow">87%</div>
+                    </div>
+                    </div>
+                    <div class="skill-html skill">
+                        <div class="skill-text">
+                    <div class="html">
+                        ADOBE XD / FIGMA
+                    </div>
+                        </div>
+                    <div class="html-prog wow prog">
+                 <div class="jquery-progress wow">94%</div>
+                    </div>
+                    </div>
+                    <div class="skill-html skill">
+                        <div class="skill-text">
+                    <div class="html">
+                        SCSS
+                    </div>
+                        </div>
+                    <div class="html-prog wow prog">
+                 <div class="seo-progress wow">84%</div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+    <!--copyright-section You Can Remove After Downloading-->
+            <div class="footer">
+             <div class="footer-text">
+                 <img src="./images/copyright.png" alt="copyright-img" class="images" height="14px"> chathura mahanama | all rights reserved. 
+             </div>
+            </div>
+    <!--copyright-section-->
+        </div>
+        <!--about end-->
+        <!--portfolio-->
+        <div id="portfolio">
+            <div class="color-changer">
+                <div class="color-panel">
+                    <img src="images/gear.png" alt="">
+                </div>
+                <div class="color-selector">
+                    <div class="heading">COLOR THEME</div>
+                    <div class="colors">
+                        <ul >
+                        <li>
+                            <a href="#0" class="color-red " title="color-red"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-purple" title="color-purple"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-malt" title="color-malt"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-green" title="color-green"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-blue" title="color-blue"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-orange" title="color-orange"></a>
+                        </li>
+                        </ul>
+                    </div>
+                </div>
+                </div>
+            <div class="portfolio-header"> <span class="color"> My </span> Portfolio
+            <span class ="header-caption"> Some Of My <span class="color"> Works</span></span></div>
+             <div id="portfolio-content">
+                 <div class="portfolio portfolio-first">
+                     <div class="portfolio-image">
+                        <img src="images/Screenshot (21)-Recovered.png" alt="portfolio-first">
+                     </div>
+                     <div class="portfolio-text">
+                         <h2>3D calculator</h2>
+                         <p>A beautiful, free online scientific calculator with advanced features for evaluating percentages, 
+                            fractions, exponential functions, logarithms, trigonometry ...
+                        </p>
+                         <div class="button"><a href="#"><button><span class="index"> View Project<i class="gg-arrow-right"></i></span></button></a></div>
+                     </div>
+                 </div>
+                 <div class="portfolio portfolio-second">
+                    <div class="portfolio-image">
+                        <img src="images/portfolio-second.jpg" alt="portfolio-second">
+                    </div>
+                    <div class="portfolio-text">
+                        <h2>Web Designing</h2>
+                        <p></p>
+                        <div class="button"><a href="#"><button><span class="index"> View Project<i class="gg-arrow-right"></i></span></button></a></div>
+                    </div>
+                </div>
+             
+                <div class="portfolio portfolio-third">
+                    <div class="portfolio-image">
+                        <img src="images/portfolio-third.jpg" alt="portfolio-third">
+                    </div>
+                    <div class="portfolio-text">
+                        <h2>UI Designing</h2>
+                        <p></p>
+                        <div class="button"><a href="#"><button><span class="index"> View Project<i class="gg-arrow-right"></i></span></button></a></div>
+                    </div>
+                </div>
+                <div class="portfolio portfolio-fourth">
+                    <div class=" portfolio-image">
+                        <img src="images/portfolio-fourth.jpg" alt="portfolio-fourth">
+                    </div>
+                    <div class="portfolio-text">
+                        <h2>Graphics Designing</h2>
+                        <p></p>
+                        <div class="button"><a href="#"><button><span class="index"> View Project<i class="gg-arrow-right"></i></span></button></a></div>
+                    </div>
+                </div>
+                 </div>
+                    <!--copyright-section You Can Remove After Downloading-->
+            <div class="footer">
+                <div class="footer-text">
+                    <img src="./images/copyright.png" alt="copyright-img" class="images" height="14px"> chathura mahanama | all rights reserved.
+                </div>
+               </div>
+       <!--copyright-section-->
+             </div>
+        <!--portfolio end-->
+        <!--blog-->
+        <div id="blog">
+            <div class="color-changer">
+                <div class="color-panel">
+                    <img src="images/gear.png" alt="">
+                </div>
+                <div class="color-selector">
+                    <div class="heading">COLOR THEME</div>
+                    <div class="colors">
+                        <ul >
+                        <li>
+                            <a href="#0" class="color-red " title="color-red"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-purple" title="color-purple"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-malt" title="color-malt"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-green" title="color-green"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-blue" title="color-blue"></a>
+                        </li>
+                        <li>
+                            <a href="#0" class="color-orange" title="color-orange"></a>
+                        </li>
+                        </ul>
+                    </div>
+                </div>
+                </div>
+        <div class="blog-header"> Blogs</span>
+            <span class ="header-caption"> My Latest <span class="color"> blog posts.</span></span></div>
+            <div class="blog-content">
+                 <div class="blogs">
+                     <a href="#">
+                     <div class="img">
+                        <img src="images/font end rules.png" alt="blog-one">
+                        <div class="blog-date">8 May,2022</div>
+                     </div>
+                     <div class="blog-text">
+                        <div class="area" >
+                            <ul class="circles">
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                            </ul>
+                    </div >
+                         <h3>Top Ten Front-End Design Rules For Developers</h3>
+                         <p>Truly understanding design is easier said than done. 
+                            Coding and aesthetic design require very different skill sets, which is why some front-end developers arent as proficient in design as they could be, 
+                            and the quality of their work suffers for it.</p>
+                     </div></a>
+                 </div>      
+                 <div class="blogs">
+                    <a href="#">
+                    <div class="img">
+                        <img src="images/marketing plan tips.jpg" alt="blog-two">
+                        <div class="blog-date">16 Jan,2022</div>
+                    </div>
+                    <div class="blog-text">
+                        <div class="area" >
+                            <ul class="circles">
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                            </ul>
+                    </div >
+                        <h3>Top Marketing Planning Tips</h3>
+                        <p> Knowledge is power. The more you know about your market, your clients, your prospects, and your competition, 
+                            the more you can address them in your marketing plan. Research reduces risk. Invest in it and you wont be sorry. 
+                            But remember, professional services are different.</p>
+                    </div></a>
+                </div>      
+                <div class="blogs">
+                    <a href="#">
+                    <div class="img">
+                        <img src="images/font end roadmap.jpg" alt="blog-three">
+                        <div class="blog-date">30 Dec,2021</div>
+                    </div>
+                    <div class="blog-text">
+                        <div class="area" >
+                            <ul class="circles">
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                            </ul>
+                    </div >
+                        <h3>Front-End Roadmap</h3>
+                        <p>To become a web developer, start with the subjects below,
+                            in the following order: The first thing you have to learn, is HTML, 
+                            which is the standard markup language for creating web pages.</p>
+                    </div></a>
+                </div>
+                <div class="blogs">
+                    <a href="#">
+                    <div class="img">
+                        <img src="images/post-four.jpg" alt="blog-four">
+                        <div class="blog-date">6 Jul,2022</div>
+                    </div>
+                    <div class="blog-text">
+                        <div class="area" >
+                            <ul class="circles">
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                            </ul>
+                    </div >
+                        <h3>Web Development</h3>
+                        <p>Web development, also known as website development, refers to the tasks associated with creating, 
+                            building, and maintaining websites and web applications that run online on a browser. 
+                            It may, however, also include web design, web programming, and database management. </p>
+                    </div></a>
+                </div>  
+                <div class="blogs">
+                    <a href="#">
+                    <div class="img">
+                        <img src="images/post-five.jpg" alt="blog-five">
+                        <div class="blog-date">1 Feb,2022</div>
+                    </div>
+                    <div class="blog-text">
+                        <div class="area" >
+                            <ul class="circles">
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                            </ul>
+                    </div >
+                        <h3>Work From Home</h3>
+                        <p>Many remote jobs also come with flexible schedules, 
+                            which means that workers can start and end their day as they choose, 
+                            as long as their work is complete and leads to strong outcomes.</p>
+                    </div></a>
+                </div>  
+                <div class="blogs">
+                    <a href="#">
+                    <div class="img">
+                        <img src="images/post-six.jpg" alt="blog-six">
+                        <div class="blog-date">28 Feb,2022</div>
+                    </div>
+                    <div class="blog-text">
+                        <div class="area" >
+                            <ul class="circles">
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                                    <li></li>
+                            </ul>
+                    </div >
+                        <h3>Business Trip</h3>
+                        <p>In todays digital world, we can communicate across different time zones at a moments notice. 
+                            However, when it comes to brokering a big deal or fostering a solid and long-lasting business relationship, 
+                            nothing beats face-to-face interaction.</p>
+                    </div></a>
+                </div>        
+            </div>
+               <!--copyright-section You Can Remove After Downloading-->
+               <div class="footer">
+                <div class="footer-text">
+                    <img src="./images/copyright.png" alt="copyright-img" class="images" height="14px"> chathura mahanama | all rights reserved.
+                </div>
+               </div>
+       <!--copyright-section-->
+        </div>
+        <!--blog end-->
+        <!--contact-->
+     <div id="contact">
+        <div class="color-changer">
+            <div class="color-panel">
+                <img src="images/gear.png" alt="">
+            </div>
+            <div class="color-selector">
+                <div class="heading">COLOR THEME</div>
+                <div class="colors">
+                    <ul >
+                    <li>
+                        <a href="#0" class="color-red " title="color-red"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-purple" title="color-purple"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-malt" title="color-malt"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-green" title="color-green"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-blue" title="color-blue"></a>
+                    </li>
+                    <li>
+                        <a href="#0" class="color-orange" title="color-orange"></a>
+                    </li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+         <div class="contact-header">Contact <span class="color"> Me</span>
+        <div class="contact-header-caption"> <span class="color"> Get</span> In Touch.</div></div>
+        <div class="contact-content">
+            <!--Contact form-->
+             <div class="contact-form">
+                 <div class="form-header">
+                     Message Me
+                 </div>
+                 <form id="myForm" action="#">
+                    <div class="input-line">
+                        <input  id="name" type="text" placeholder="Name" class="input-name">
+                        <input id="email" type="email" placeholder="Email"  class="input-name">
+                    </div>
+                    <input type="text" id="subject" placeholder="subject" class="input-subject">
+                    <textarea id ="body" class="input-textarea" placeholder="message"></textarea>
+                    <button type="button" id ="submit" value="send">Submit</button>
+                 </form>
+               
+             </div>
+            <!--Contact form-->
+            <!--Contact information-->
+             <div class="contact-info">
+            <div class="area" >
+            <ul class="circles">
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+                    <li></li>
+            </ul>
+    </div >
+                <div class="contact-info-header">
+                    Contact Info
+                </div>
+                <div class="contact-info-content">
+                <div class="contect-info-content-line">
+                    <img src="./images/icon-name.png" class="icon" alt="name-icon">
+                    <div class="contact-info-icon-text">
+                        <h6>Name</h6>
+                        <p>Chathura Mahanama</p>
+                  </div>
+                </div>
+                <div class="contect-info-content-line">
+                  <img src="./images/icon-location.png" class="icon" alt="location-icon">
+                  <div class="contact-info-icon-text">
+                      <h6>Location</h6>
+                      <p>Matara, Srilanka</p>
+                </div>
+              </div>
+              <div class="contect-info-content-line">
+                  <img src="./images/icon-phone.png" class="icon" alt="phone-icon">
+                  <div class="contact-info-icon-text">
+                      <h6>Call</h6>
+                      <p>(+94) 77 276 472 1</p>
+                </div>
+              </div>
+              
+              <div class="contect-info-content-line">
+                  <img src="./images/icon-email.png" class="icon" alt="email-icon">
+                  <div class="contact-info-icon-text">
+                      <h6>Email</h6>
+                      <p>mahanama.info@gmail.com</p>
+                </div>
+              </div>
+                </div>
+            <!--Contact information end-->
+           </div>
+        </div>
+                    <!--copyright-section You Can Remove After Downloading-->
+                    <div class="footer">
+                        <div class="footer-text">
+                            <img src="./images/copyright.png" alt="copyright-img" class="images" height="14px"> chathura mahanama | all rights reserved.
+                        </div>
+                       </div>
+               <!--copyright-section-->
+     </div>
+        <!--contact end-->
+    </div>
+    <!--all the divisions-->
+    <script src="js/jquery.min.js"></script>
+    <script src="js/particles.js"></script>
+    <script src="js/particles.min.js"></script>
+    <script src="js/index.js"></script>
+    <!--particles script-->
+    <script>
+  particlesJS("particles", {"particles":{"number":{"value":40,"density":{"enable":true,"value_area":800}},"color":{"value":"#ffffff"},"shape":{"type":"circle","stroke":{"width":0,"color":"#000000"},"polygon":{"nb_sides":5},"image":{"src":"img/github.svg","width":100,"height":100}},"opacity":{"value":0.5,"random":false,"anim":{"enable":false,"speed":1,"opacity_min":0.1,"sync":false}},"size":{"value":3,"random":true,"anim":{"enable":false,"speed":40,"size_min":0.1,"sync":false}},"line_linked":{"enable":true,"distance":150,"color":"#ffffff","opacity":0.4,"width":1},"move":{"enable":true,"speed":6,"direction":"none","random":false,"straight":false,"out_mode":"out","bounce":false,"attract":{"enable":false,"rotateX":600,"rotateY":1200}}},"interactivity":{"detect_on":"canvas","events":{"onhover":{"enable":true,"mode":"repulse"},"onclick":{"enable":true,"mode":"push"},"resize":true},"modes":{"grab":{"distance":400,"line_linked":{"opacity":1}},"bubble":{"distance":400,"size":40,"duration":2,"opacity":8,"speed":3},"repulse":{"distance":200,"duration":0.4},"push":{"particles_nb":4},"remove":{"particles_nb":2}}},"retina_detect":true});
+    </script>
+
+</body>
+</html>
